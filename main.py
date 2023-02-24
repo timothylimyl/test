@@ -76,7 +76,7 @@ def load_tokenisation():
     return tiktoken.get_encoding("gpt2")
 
 # Cached
-weights_path = "weights"
+weights_path = os.getcwd()
 model = load_model(path=weights_path)
 enc = load_tokenisation()
 encode = lambda s: enc.encode(s, allowed_special={"<|endoftext|>"})
