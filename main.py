@@ -1,13 +1,10 @@
-"""
-Sample from a trained model
-"""
 import os
 import torch
 import tiktoken
 import streamlit as st
 from PIL import Image
 from model import GPTConfig, GPT
-
+import gdown
 # -----------------------------------------------------------------------------
 img = Image.open("images/st_logo.png")
 st.set_page_config(
@@ -53,9 +50,13 @@ torch.manual_seed(seed)
 # Load model (Cache load)
 
 @st.cache_resource
-def load_model(path):
-    ckpt_path = os.path.join(path, "ckpt.pt")
-    checkpoint = torch.load(ckpt_path, map_location=device)
+def load_model(URL):
+
+    # Weights download from gdrive
+    weights_path = "ckpt.pt"
+    gdown.download(URL,output=weights_path,quiet=False)
+
+    checkpoint = torch.load(weights_path, map_location=device)
     gptconf = GPTConfig(**checkpoint["model_args"])
     model = GPT(gptconf)
     state_dict = checkpoint["model"]
@@ -76,8 +77,7 @@ def load_tokenisation():
     return tiktoken.get_encoding("gpt2")
 
 # Cached
-weights_path = os.getcwd()
-model = load_model(path=weights_path)
+model = load_model(URL="https://drive.google.com/uc?id=14I94WUIMtE5rm_wVAp3bO-TglPgCfRNX")
 enc = load_tokenisation()
 encode = lambda s: enc.encode(s, allowed_special={"<|endoftext|>"})
 decode = lambda l: enc.decode(l)
