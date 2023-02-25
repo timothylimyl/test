@@ -84,15 +84,18 @@ encode = lambda s: enc.encode(s, allowed_special={"<|endoftext|>"})
 decode = lambda l: enc.decode(l)
 
 # Allowing flexible user query
-input_text = "Singapore Technologies (ST) Engineering is a company in Singapore that"
-text_query = st.text_area("Input text (Press Ctrl+Enter once done):", value=input_text, height=250)
+def_input_text = "Singapore Technologies (ST) Engineering is a company in Singapore that"
+def_new_words = 200
+def_temperature = 0.7
+
+text_query = st.text_area("Input text (Press Ctrl+Enter once done):", value=def_input_text, height=250)
 start_ids = encode(text_query)
 
-num_samples = st.slider('Number of sentences generation', 1, 10, 1, step=1)
-max_new_words = st.slider('Number of words in sentence output (approximated)', 1, 1000,200, step=10) 
+num_samples = st.slider('Number of sentences generation', 1, 5, 1, step=1)
+max_new_words = st.slider('Number of words in sentence output (approximated)', 0, 1000,def_new_words, step=10) 
 max_new_tokens = int(max_new_words * 1.3333) # roughly 1 token = 3/4 of a word
-temperature = st.slider('Randomness in Generation [Higher=More Random, Lower=Less Random, 1 = Neutral]', 0.0, 2.0, 0.7, step=0.1)
-temperatre = temperature if temperature != 0 else 1e-6 #buggy due to multinomial with 0
+temperature = st.slider('Randomness in Generation [Higher=More Random, Lower=Less Random, 1 = Neutral]', 0.0, 2.0, def_temperature, step=0.1)
+temperature = temperature if temperature != 0.0 else 1e-6 #buggy due to multinomial with 0
 # top_k = st.slider('Amount of output token', 1, 1000, 200, step=1)
 top_k = 200
 
@@ -151,14 +154,14 @@ Its sole shareholder is Singapore's GICOS, a.k.a. ST Engineering Corp.
 if st.button("Generate me some text!"):
     x = torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...]
     # run generation
-    
+
     # set a default input and output for quick response:
-    if text_query == input_text:       
+    if text_query == def_input_text and max_new_words == def_new_words and temperature == def_temperature:       
         st.markdown("Pre-generated \n\n")
-        for i in range(num_samples):
+        for i in range(min(num_samples,len(defaults))):
             st.text_area(f":mailbox: Generation {i+1}", defaults[i], height=400)
             st.markdown("\n\n\n\n")
-    else: # if not same input text then generate for user
+    else: # if not default then generate for user
         with torch.no_grad():
             st.markdown("\n\n")
             for k in range(num_samples):
